@@ -1,40 +1,46 @@
-import SpriteSheet from './SpriteSheet.js';
-import {loadImage, loadLevel} from './loaders.js';
-
-function drawBackground(background, context, sprites) {
-    background.ranges.forEach(([x1, x2, y1, y2]) => {
-        for (let x = x1; x < x2; ++x) {
-            for (let y = y1; y < y2; ++y) {
-                sprites.drawTile(background.tile, context, x, y);
-            }
-        }
-    });
-}
+import Compositor from './Compositor.js';
+import {loadLevel} from './loaders.js';
+import {loadMarioSprite, loadBackgroundSprites} from './sprites.js'
+import{createBackgroundLayer} from './layers.js';
 
 
 
-
-function loadBackgroundSprites(){
-    return loadImage('/img/tiles.png')
-    .then(image => {
-        const sprites = new SpriteSheet(image, 16, 16);
-        sprites.defineTile('ground', 0, 0);
-        sprites.defineTile('sky', 3, 23);
-        return sprites;
-    });
-}
 const canvas = document.getElementById('screen');
 const context = canvas.getContext('2d');
 
+function createSpriteLayer(sprite,pos){
+    return function drawSpriteLayer(context){
+        for(let i = 0; i < 20; ++i){
+            sprite.draw('idle', context, pos.x + i * 16, pos.y);
+        }
+    };
+}
+
 Promise.all([
-    //loadMarioSprite(),
+    loadMarioSprite(),
     loadBackgroundSprites(),
     loadLevel('1-1'),
 ])
-.then(([/*marioSprite,*/ sprites, level]) => {
-    level.backgrounds.forEach(background => {
-        drawBackground(background, context, sprites);
-    });
+.then(([marioSprite, backgroundSprites, level]) => {
+    const comp = new Compositor();
+    const backgroundLayer = createBackgroundLayer(level.backgrounds, backgroundSprites);
+    comp.layers.push(backgroundLayer);
+    
+    const pos = {
+        x: 0,
+        y: 0,
+    };
 
-    marioSprite.draw('idle', context, 64, 64);
+    const spriteLayer = createSpriteLayer(marioSprite, pos);
+    comp.layers.push(spriteLayer);
+
+    function update(){
+        comp.draw(context);
+        pos.x += 2;
+        pos.y += 2;
+        requestAnimationFrame(update);
+    }
+
+    update();
+
 });
