@@ -1,5 +1,5 @@
 export default class SpriteSheet {
-    constructor(image, width = 16, height = 16) {
+    constructor(image, width, height) {
         this.image = image;
         this.width = width;
         this.height = height;

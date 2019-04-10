@@ -1,10 +1,11 @@
 export default class Compositor {
-    constructor(){
+    constructor() {
         this.layers = [];
     }
-    draw(context){
+
+    draw(context) {
         this.layers.forEach(layer => {
             layer(context);
-        })
+        });
     }
 }
